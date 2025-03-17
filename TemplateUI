@@ -1,0 +1,99 @@
+import sys
+from PyQt5.QtWidgets import (
+    QApplication, QMainWindow, QWidget, QVBoxLayout, QLabel, QLineEdit, QTableWidget, QTableWidgetItem,
+    QPushButton, QTabWidget, QHBoxLayout
+)
+from PyQt5.QtCore import Qt
+
+class LoanTrackerApp(QMainWindow):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("Loan Tracker and Goals Dashboard")
+        self.setGeometry(100, 100, 1200, 800)
+        
+        main_widget = QWidget()
+        main_layout = QVBoxLayout()
+
+        self.tabs = QTabWidget()
+        main_layout.addWidget(self.tabs)
+
+        self.main_page = QWidget()
+        self.sales_plan_page = QWidget()
+        self.tabs.addTab(self.main_page, "Main Page")
+        self.tabs.addTab(self.sales_plan_page, "Sales Plan")
+
+        # Build the main page
+        self.build_main_page()
+
+        self.build_sales_plan_page()
+
+        main_widget.setLayout(main_layout)
+        self.setCentralWidget(main_widget)
+
+    def build_main_page(self):
+        # Layout
+        layout = QHBoxLayout()
+
+        left_pane = QVBoxLayout()
+        left_pane.addWidget(QLabel("My Closed Loans"))
+        self.loan_table = QTableWidget(10, 5)  # Rows and columns
+        self.loan_table.setHorizontalHeaderLabels(["Month", "Name", "Loan Amount", "Referral Source", ".bps"])
+        self.loan_table.itemChanged.connect(self.update_calculations)
+        left_pane.addWidget(self.loan_table)
+
+        center_pane = QVBoxLayout()
+        center_pane.addWidget(QLabel("Goals Dashboard"))
+        self.goals_dashboard = QLabel("Goals and Performance Metrics Here")
+        center_pane.addWidget(self.goals_dashboard)
+
+        right_pane = QVBoxLayout()
+        right_pane.addWidget(QLabel("Top Referral Sources"))
+        self.referral_table = QTableWidget(5, 3)  # Rows and columns
+        self.referral_table.setHorizontalHeaderLabels(["Rank", "Count", "Total Loan Amount"])
+        right_pane.addWidget(self.referral_table)
+
+
+        layout.addLayout(left_pane)
+        layout.addLayout(center_pane)
+        layout.addLayout(right_pane)
+
+        self.main_page.setLayout(layout)
+
+    def build_sales_plan_page(self):
+        layout = QVBoxLayout()
+        layout.addWidget(QLabel("2024 Sales Plan"))
+        
+        self.sales_plan_table = QTableWidget(12, 6)  # 12 months, 6 columns
+        self.sales_plan_table.setHorizontalHeaderLabels([
+            "Month", "Loan Count Goal", "Actual Closed Loans", "Volume Goal", "Actual Volume", "Diff +/-"
+        ])
+        layout.addWidget(self.sales_plan_table)
+
+        self.sales_plan_page.setLayout(layout)
+
+    def update_calculations(self):
+        for row in range(self.loan_table.rowCount()):
+            try:
+                loan_amount = float(self.loan_table.item(row, 2).text())
+                bps = float(self.loan_table.item(row, 4).text())
+                estimated_income = loan_amount * bps / 100
+                self.loan_table.setItem(row, 5, QTableWidgetItem(f"${estimated_income:,.2f}"))
+            except (ValueError, AttributeError):
+                continue
+        
+        self.update_goals_dashboard()
+        self.update_referral_sources()
+
+    def update_goals_dashboard(self):
+        self.goals_dashboard.setText("Updated Goals and Performance Metrics")
+
+    def update_referral_sources(self):
+        # Calculate and update
+        self.referral_table.setItem(0, 0, QTableWidgetItem("1"))
+        self.referral_table.setItem(0, 1, QTableWidgetItem("Example Count"))
+        self.referral_table.setItem(0, 2, QTableWidgetItem("Example Loan Amount"))
+
+app = QApplication(sys.argv)
+window = LoanTrackerApp()
+window.show()
+sys.exit(app.exec_())
